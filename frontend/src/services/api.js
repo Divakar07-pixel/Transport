@@ -64,8 +64,8 @@ async function post(url, payload = {}) {
   const config = endpointCollections[path]
   if (!config) throw new Error(`Unsupported Firebase create request: ${path}`)
   const [name, idField, prefix] = config
-  const id = makeId(prefix)
-  const record = { ...payload, [idField]: id, Created_At: new Date().toISOString(), _createdAt: serverTimestamp() }
+  const id = payload[idField] || makeId(prefix)
+  const record = { ...payload, [idField]: id, Created_At: payload.Created_At || new Date().toISOString(), _createdAt: serverTimestamp() }
   await addDoc(userCollection(name), record)
   const { _createdAt, ...safeRecord } = record
   return response(safeRecord)
