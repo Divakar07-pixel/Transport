@@ -137,8 +137,8 @@ export default function DataPage({ type }) {
         setRows(response.data.trips || [])
       } else if (type === 'finance') {
         const [income, expenses] = await Promise.all([api.get('/income'), api.get('/expenses')])
-        setExtra({ ...income.data, expenses: expenses.data })
-        setRows(income.data.income || [])
+        setExtra({ payments: await api.get('/payments').then(r => r.data), expenses: expenses.data })
+        setRows(income.data)
       } else {
         const response = await api.get(config.endpoint)
         setRows(response.data)
