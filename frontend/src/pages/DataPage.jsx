@@ -5,6 +5,7 @@ import {
 } from 'lucide-react'
 import api from '../services/api'
 import Modal from '../components/Modal'
+import * as XLSX from 'xlsx'
 
 const configs = {
   vehicles: {
@@ -201,38 +202,77 @@ export default function DataPage({ type }) {
 
   async function exportBook() {
     try {
-      const response = await api.get('/export/excel', { responseType: 'blob' })
-      const url = URL.createObjectURL(response.data)
-      const anchor = document.createElement('a')
-      anchor.href = url
-      anchor.download = 'Transport_Management.xlsx'
-      anchor.click()
-      URL.revokeObjectURL(url)
-    } catch {
-      setError('Excel download failed')
+      const definitions = [
+        ['Vehicles', '/vehicles'], ['Drivers', '/drivers'], ['Trips', '/trips'],
+        ['Fuel_Expenses', '/fuel'], ['Trip_Income', '/income'],
+        ['Payments', '/payments'], ['Other_Expenses', '/expenses']
+      ]
+      const workbook = XLSX.utils.book_new()
+      for (const [sheet, endpoint] of definitions) {
+        const result = await api.get(endpoint)
+        const records = result.data.map(({ _docId, _createdAt, ...record }) => record)
+        XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(records), sheet)
+      }
+      XLSX.writeFile(workbook, 'Transport_Management.xlsx')
+      setError('')
+    } catch (exportError) {
+      setError(exportError.message || 'Excel download failed')
+    }
+  }
+
+  async function importBook(event) {
+    const file = event.target.files?.[0]
+    if (!file) return
+    if (!window.confirm('Import these Excel rows into your Firebase workspace? Existing records will not be deleted.')) {
+      event.target.value = ''
+      return
+    }
+    setBusy(true)
+    setError('')
+    try {
+      const workbook = XLSX.read(await file.arrayBuffer(), { type: 'array', cellDates: false })
+      const definitions = [
+        ['Vehicles', '/vehicles'], ['Drivers', '/drivers'], ['Trips', '/trips'],
+        ['Fuel_Expenses', '/fuel'], ['Trip_Income', '/income'],
+        ['Payments', '/payments'], ['Other_Expenses', '/expenses']
+      ]
+      let imported = 0
+      for (const [sheet, endpoint] of definitions) {
+        if (!workbook.Sheets[sheet]) continue
+        const records = XLSX.utils.sheet_to_json(workbook.Sheets[sheet], { defval: '' })
+        for (const record of records) {
+          Object.keys(record).forEach(key => {
+            if (record[key] instanceof Date) record[key] = record[key].toISOString().slice(0, 10)
+          })
+          await api.post(endpoint, record)
+          imported += 1
+        }
+      }
+      setError(`Imported ${imported} records into Firebase. Refresh the relevant pages to view them.`)
+    } catch (importError) {
+      setError(importError.message || 'Excel import failed')
+    } finally {
+      setBusy(false)
+      event.target.value = ''
     }
   }
 
   if (type === 'excel') {
     return <div className="stack-lg">
-      <div className="page-intro"><h2>Excel Management</h2><p>Your Excel workbook is the primary record store for TransportPro.</p></div>
+      <div className="page-intro"><h2>Excel Management</h2><p>Firebase Firestore is your primary cloud record store. Use Excel to import or export workbook backups.</p></div>
       <div className="panel excel-card">
         <FileSpreadsheet size={42} color="#16834a"/><h3>Transport_Management.xlsx</h3>
-        <p>Download the complete workbook containing vehicles, drivers, trips, fuel, income, payments, expenses and activity history.</p>
+        <p>Export your vehicles, drivers, trips, fuel, income, payments and expenses from Firebase into one workbook.</p>
         <button className="primary-btn" onClick={exportBook}><Download size={17}/> Download Excel workbook</button>
-        <button className="secondary-btn" onClick={async () => {
-          try {
-            await api.post('/backup')
-            setError('Backup created successfully')
-          } catch {
-            setError('Backup could not be created')
-          }
-        }}><RefreshCw size={16}/> Create backup</button>
+        <label className="secondary-btn" style={{display:'inline-flex',alignItems:'center',gap:8,cursor:'pointer',marginTop:12}}>
+          <FileSpreadsheet size={16}/> Import Excel workbook
+          <input type="file" accept=".xlsx,.xls" onChange={importBook} disabled={busy} style={{display:'none'}}/>
+        </label>
+        {busy && <p className="muted">Importing records…</p>}
         {error && <p className="muted">{error}</p>}
       </div>
     </div>
   }
-
   if (type === 'reports') {
     return <div className="stack-lg">
       <div className="page-intro"><h2>Reports & Analytics</h2><p>Review operational records and export your source workbook.</p></div>
