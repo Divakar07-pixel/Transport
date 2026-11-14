@@ -1,4 +1,4 @@
-name: Deploy frontend preview to GitHub Pages
+name: Deploy TransportPro to GitHub Pages
 
 on:
   push:
@@ -21,6 +21,9 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
 
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -38,10 +41,13 @@ jobs:
           VITE_API_URL: ${{ vars.VITE_API_URL }}
         run: npm run build
 
-      - name: Configure GitHub Pages artifact
+      - name: Verify build output
         run: |
+          test -s frontend/dist/index.html
           cp frontend/dist/index.html frontend/dist/404.html
           touch frontend/dist/.nojekyll
+          echo "Built files:"
+          find frontend/dist -maxdepth 2 -type f | sort | head -80
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
