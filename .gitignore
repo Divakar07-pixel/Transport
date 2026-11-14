@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.venv/
+venv/
+__pycache__/
+*.pyc
+.env
+backend/storage/*.xlsx
+backend/storage/*.tmp
+backups/*
+!.gitkeep

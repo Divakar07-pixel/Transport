@@ -1,0 +1,28 @@
+import { useEffect,useState } from 'react'
+import { Truck,Users,Route,Fuel,Wallet,ArrowUpRight,RefreshCw } from 'lucide-react'
+import { ResponsiveContainer,AreaChart,Area,XAxis,YAxis,Tooltip,CartesianGrid,BarChart,Bar } from 'recharts'
+import api from '../services/api'
+import StatCard from '../components/StatCard'
+const money=n=>'₹'+Number(n||0).toLocaleString('en-IN',{maximumFractionDigits:0})
+export default function Dashboard(){
+ const [data,setData]=useState(null);const [error,setError]=useState('')
+ async function load(){try{const r=await api.get('/dashboard');setData(r.data);setError('')}catch(e){setError(e.response?.data?.error||'Could not load dashboard')}}
+ useEffect(()=>{load()},[])
+ const chart=[{month:'Jan',income:0,expense:0},{month:'Feb',income:0,expense:0},{month:'Mar',income:0,expense:0},{month:'Apr',income:0,expense:0},{month:'May',income:0,expense:0},{month:'Jun',income:0,expense:0}]
+ return <div className="stack-lg"><div className="welcome-row"><div><h2>Good day, Admin <span>✦</span></h2><p>Here’s what’s happening with your transport business.</p></div><button className="secondary-btn" onClick={load}><RefreshCw size={16}/> Refresh data</button></div>{error&&<div className="error-box">{error}</div>}
+ <div className="stats-grid">
+ <StatCard label="Total vehicles" value={data?.total_vehicles??'—'} caption={`${data?.available_vehicles??0} available`} Icon={Truck}/>
+ <StatCard label="Available drivers" value={data?.available_drivers??'—'} caption={`${data?.total_drivers??0} registered`} Icon={Users} tone="purple"/>
+ <StatCard label="Total trips" value={data?.total_trips??'—'} caption={`${data?.active_trips??0} currently active`} Icon={Route} tone="orange"/>
+ <StatCard label="Fuel expenses" value={money(data?.fuel_expenses)} caption="All recorded fuel entries" Icon={Fuel} tone="red"/>
+ </div>
+ <div className="stats-grid stats-grid-secondary">
+ <StatCard label="Trip revenue" value={money(data?.revenue)} caption="Completed trips" Icon={Wallet} tone="green"/>
+ <StatCard label="Trip expenses" value={money(data?.trip_expenses)} caption="Fuel + other expenses" Icon={Fuel} tone="red"/>
+ <StatCard label="Trip profit" value={money(data?.trip_profit)} caption="Completed trip estimate" Icon={ArrowUpRight} tone="green"/>
+ <StatCard label="Completed trips" value={data?.completed_trips??'—'} caption="Delivery completed" Icon={Route} tone="blue"/>
+ </div>
+ <div className="content-grid"><section className="panel chart-panel"><div className="panel-heading"><div><h3>Business performance</h3><p>Revenue and expenses overview</p></div><span className="period-tag">Illustrative layout</span></div><div className="chart-placeholder"><ResponsiveContainer width="100%" height="100%"><AreaChart data={chart}><defs><linearGradient id="incomeFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#2563eb" stopOpacity={.22}/><stop offset="100%" stopColor="#2563eb" stopOpacity={0}/></linearGradient></defs><CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#edf0f5"/><XAxis dataKey="month" axisLine={false} tickLine={false}/><YAxis axisLine={false} tickLine={false}/><Tooltip/><Area type="monotone" dataKey="income" stroke="#2563eb" fill="url(#incomeFill)" strokeWidth={2}/><Area type="monotone" dataKey="expense" stroke="#f59e0b" fill="none" strokeWidth={2}/></AreaChart></ResponsiveContainer></div><p className="chart-footnote">Monthly chart will populate as transaction history grows.</p></section>
+ <section className="panel quick-panel"><div className="panel-heading"><div><h3>Quick overview</h3><p>Current fleet status</p></div></div><div className="overview-row"><div className="overview-icon blue"><Truck/></div><div><b>Vehicles available</b><small>Ready for assignment</small></div><strong>{data?.available_vehicles??0}</strong></div><div className="overview-row"><div className="overview-icon purple"><Users/></div><div><b>Drivers available</b><small>Ready for a new trip</small></div><strong>{data?.available_drivers??0}</strong></div><div className="overview-row"><div className="overview-icon orange"><Route/></div><div><b>Trips in progress</b><small>Currently on the road</small></div><strong>{data?.active_trips??0}</strong></div></section></div>
+ <section className="panel"><div className="panel-heading"><div><h3>Recent trips</h3><p>Latest activity across your fleet</p></div></div><div className="table-wrap"><table><thead><tr><th>TRIP ID</th><th>ROUTE</th><th>DATE</th><th>STATUS</th></tr></thead><tbody>{(data?.recent_trips||[]).length?data.recent_trips.map(t=><tr key={t.Trip_ID}><td className="id-cell">{t.Trip_ID}</td><td>{t.From_Location} <span className="route-arrow">→</span> {t.To_Location}</td><td>{t.Trip_Date}</td><td><span className={`status ${String(t.Status).toLowerCase().replace(' ','-')}`}>{t.Status}</span></td></tr>):<tr><td colSpan="4" className="empty-cell">No trips recorded yet. Add your first trip from Trip Management.</td></tr>}</tbody></table></div></section></div>
+}
