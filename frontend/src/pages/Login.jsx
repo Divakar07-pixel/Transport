@@ -3,7 +3,8 @@ import {
   Activity, BatteryCharging, Eye, EyeOff, LockKeyhole, MapPin, ShieldCheck,
   Truck, UserRound, Wrench, Zap
 } from 'lucide-react'
-import api, { apiAvailable } from '../services/api'
+import { signInWithEmailAndPassword } from 'firebase/auth'
+import { auth } from '../services/firebase'
 import './Login.css'
 
 const features = [
@@ -41,7 +42,7 @@ function FleetIllustration() {
 }
 
 export default function Login({ onLogin }) {
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
@@ -50,13 +51,16 @@ export default function Login({ onLogin }) {
   async function submit(event) {
     event.preventDefault()
     setError('')
-    if (!apiAvailable) return
     setBusy(true)
     try {
-      const response = await api.post('/auth/login', { username, password })
-      onLogin(response.data.user)
+      await signInWithEmailAndPassword(auth, email.trim(), password)
     } catch (loginError) {
-      setError(loginError.response?.data?.error || 'Unable to sign in. Check the API connection.')
+      const messages = {
+        'auth/invalid-credential': 'Incorrect email or password.',
+        'auth/user-not-found': 'No administrator account was found for this email.',
+        'auth/too-many-requests': 'Too many attempts. Please wait and try again.'
+      }
+      setError(messages[loginError.code] || loginError.message || 'Unable to sign in.')
     } finally {
       setBusy(false)
     }
@@ -95,19 +99,18 @@ export default function Login({ onLogin }) {
           <p>Sign in to continue to TransportPro</p>
         </header>
 
-        {!apiAvailable && <div className="tp-preview-notice" role="status">
-          This GitHub Pages preview shows the interface only. Sign-in and live data require the Flask backend.
-        </div>}
+        
 
         <label className="tp-field">
-          <span>Administrator username</span>
+          <span>Administrator email</span>
           <span className="tp-input-wrap">
             <UserRound size={17} aria-hidden="true"/>
             <input
+              type="email"
               autoComplete="username"
-              value={username}
-              onChange={event => setUsername(event.target.value)}
-              placeholder="Enter your username"
+              value={email}
+              onChange={event => setEmail(event.target.value)}
+              placeholder="Enter your administrator email"
               required
             />
           </span>
@@ -135,8 +138,8 @@ export default function Login({ onLogin }) {
         </label>
 
         {error && <div className="tp-login-error" role="alert">{error}</div>}
-        <button className="tp-sign-in" type="submit" disabled={busy || !apiAvailable}>
-          {!apiAvailable ? 'Preview only' : busy ? 'Signing in…' : 'Sign in'}
+        <button className="tp-sign-in" type="submit" disabled={busy}>
+          {busy ? 'Signing in…' : 'Sign in'}
         </button>
 
         <div className="tp-login-divider"><span>SECURE ADMIN ACCESS</span></div>
