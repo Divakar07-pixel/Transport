@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import api, { apiAvailable } from './services/api'
+import { Routes, Route, Navigate } from 'react-router-dom'
+import { onAuthStateChanged } from 'firebase/auth'
+import { auth } from './services/firebase'
 import Login from './pages/Login'
 import Layout from './components/Layout'
 import Dashboard from './pages/Dashboard'
@@ -10,22 +11,23 @@ import Settings from './pages/Settings'
 function Guard({ user, children }) {
   return user ? children : <Navigate to="/login" replace />
 }
+
 export default function App() {
   const [user, setUser] = useState(null)
   const [checking, setChecking] = useState(true)
-  const location = useLocation()
-  useEffect(() => {
-    if (!apiAvailable) {
-      setUser(null)
-      setChecking(false)
-      return
-    }
-    setChecking(true)
-    api.get('/auth/me').then(r => setUser(r.data.user)).catch(() => setUser(null)).finally(() => setChecking(false))
-  }, [location.pathname])
-  if (checking) return <div className="loading-screen"><div className="spinner"/>Loading Hello-Transport</div>
+
+  useEffect(() => onAuthStateChanged(auth, firebaseUser => {
+    setUser(firebaseUser ? {
+      uid: firebaseUser.uid,
+      email: firebaseUser.email,
+      username: firebaseUser.email
+    } : null)
+    setChecking(false)
+  }), [])
+
+  if (checking) return <div className="loading-screen"><div className="spinner"/>Loading TransportPro</div>
   return <Routes>
-    <Route path="/login" element={user ? <Navigate to="/" /> : <Login onLogin={setUser}/>} />
+    <Route path="/login" element={user ? <Navigate to="/" replace/> : <Login/>} />
     <Route path="/" element={<Guard user={user}><Layout user={user} onLogout={() => setUser(null)} /></Guard>}>
       <Route index element={<Dashboard/>}/>
       <Route path="vehicles" element={<DataPage type="vehicles"/>}/>
