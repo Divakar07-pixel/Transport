@@ -129,6 +129,7 @@ export default function DataPage({ type }) {
   const config = configs[type]
 
   async function load() {
+    if (type === 'excel') return
     setError('')
     try {
       if (type === 'reports') {
