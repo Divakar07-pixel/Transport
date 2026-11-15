@@ -18,6 +18,15 @@ const currentUid = () => {
 }
 const userCollection = name => collection(db, 'users', currentUid(), name)
 const makeId = prefix => `${prefix}-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`
+const makeFourDigitId = async (collectionName, idField) => {
+  const existing = await rows(collectionName)
+  const used = new Set(existing.map(item => String(item[idField] || '')))
+  for (let attempt = 0; attempt < 100; attempt += 1) {
+    const candidate = String(Math.floor(1000 + Math.random() * 9000))
+    if (!used.has(candidate)) return candidate
+  }
+  throw new Error(`Could not generate a unique four-digit ID for ${collectionName}. Please try again.`)
+}
 const rows = async name => {
   const snapshot = await getDocs(userCollection(name))
   return snapshot.docs.map(item => ({ ...item.data(), _docId: item.id }))
@@ -64,7 +73,7 @@ async function post(url, payload = {}) {
   const config = endpointCollections[path]
   if (!config) throw new Error(`Unsupported Firebase create request: ${path}`)
   const [name, idField, prefix] = config
-  const id = payload[idField] || makeId(prefix)
+  const id = payload[idField] || (['vehicles', 'drivers'].includes(name) ? await makeFourDigitId(name, idField) : makeId(prefix))
   const record = { ...payload, [idField]: id, Created_At: payload.Created_At || new Date().toISOString(), _createdAt: serverTimestamp() }
   await addDoc(userCollection(name), record)
   const { _createdAt, ...safeRecord } = record
