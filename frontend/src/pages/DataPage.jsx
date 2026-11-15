@@ -351,7 +351,7 @@ export default function DataPage({ type }) {
 function RecordModal({ title, onClose, fields, form, setForm, error, busy, onSubmit, lookups = { vehicles: [], drivers: [] } }) {
   return <Modal title={title} onClose={onClose}>
     <form className="form-grid" onSubmit={onSubmit}>
-      {fields.map(([key, label, type, options, required]) => (
+      {fields.filter(([key]) => !(form.Entry_Mode === 'By amount' && ['Litres', 'Rate_Per_Litre'].includes(key))).map(([key, label, type, options, required]) => (
         <label key={key}>{label}
           {type === 'vehicle-select'
             ? <select required={!!required} value={form[key] ?? ''} onChange={event => setForm({ ...form, [key]: event.target.value })}>
@@ -368,14 +368,10 @@ function RecordModal({ title, onClose, fields, form, setForm, error, busy, onSub
                 <option value="">Select</option>
                 {options.map(option => <option key={option} value={option}>{option}</option>)}
               </select>
-            : key === 'Litres' && form.Entry_Mode === 'By amount'
-            ? null
-            : (key === 'Rate_Per_Litre' && form.Entry_Mode === 'By amount')
-            ? null
             : (key === 'Amount' && form.Entry_Mode === 'By litres')
             ? <input type="number" value={Number(form.Litres || 0) * Number(form.Rate_Per_Litre || 0)} readOnly aria-label="Calculated fuel amount"/>
             : <input
-                required={!!required}
+                required={!!required || (key === 'Amount' && form.Entry_Mode === 'By amount') || (['Litres', 'Rate_Per_Litre'].includes(key) && form.Entry_Mode === 'By litres')}
                 type={type}
                 value={form[key] ?? ''}
                 onChange={event => setForm({ ...form, [key]: key === 'Registration_No' ? event.target.value.toUpperCase() : event.target.value })}
