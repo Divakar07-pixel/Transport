@@ -70,13 +70,15 @@ const configs = {
     idField: 'Fuel_ID',
     columns: ['Fuel_ID', 'Fuel_Date', 'Vehicle_ID', 'Driver_ID', 'Trip_ID', 'Fuel_Type', 'Litres', 'Rate_Per_Litre', 'Amount', 'Odometer_KM'],
     fields: [
-      ['Vehicle_ID', 'Vehicle ID', 'text', true],
+      ['Vehicle_ID', 'Vehicle', 'vehicle-select', true],
       ['Trip_ID', 'Trip ID (optional)', 'text'],
-      ['Driver_ID', 'Driver ID', 'text'],
+      ['Driver_ID', 'Driver', 'driver-select'],
       ['Fuel_Date', 'Fuel date', 'date', true],
       ['Fuel_Type', 'Fuel type', 'select', ['Diesel', 'Petrol'], true],
-      ['Litres', 'Litres', 'number', true],
-      ['Rate_Per_Litre', 'Rate per litre (₹)', 'number', true],
+      ['Entry_Mode', 'Fuel entry method', 'select', ['By litres', 'By amount'], true],
+      ['Litres', 'Litres', 'number'],
+      ['Rate_Per_Litre', 'Rate per litre (₹)', 'number'],
+      ['Amount', 'Fuel amount (₹)', 'number'],
       ['Odometer_KM', 'Odometer (KM)', 'number'],
       ['Pump_Name', 'Fuel station', 'text'],
       ['Receipt_Ref', 'Receipt reference', 'text']
@@ -119,6 +121,7 @@ const labelFor = type => type === 'fuel' ? 'fuel entry' : type === 'trips' ? 'tr
 export default function DataPage({ type }) {
   const [rows, setRows] = useState([])
   const [extra, setExtra] = useState({})
+  const [lookups, setLookups] = useState({ vehicles: [], drivers: [] })
   const [search, setSearch] = useState('')
   const [modal, setModal] = useState(false)
   const [kind, setKind] = useState('')
@@ -143,6 +146,10 @@ export default function DataPage({ type }) {
       } else {
         const response = await api.get(config.endpoint)
         setRows(response.data)
+        if (type === 'fuel') {
+          const [vehicles, drivers] = await Promise.all([api.get('/vehicles'), api.get('/drivers')])
+          setLookups({ vehicles: vehicles.data, drivers: drivers.data })
+        }
       }
     } catch (loadError) {
       setError(loadError.code ? `${loadError.code}: ${loadError.message}` : (loadError.message || 'Unable to load records'))
@@ -178,7 +185,12 @@ export default function DataPage({ type }) {
       if (editing) {
         await api.put(`${endpoint}/${editing[config.idField]}`, form)
       } else {
-        await api.post(endpoint, form)
+        await api.post(endpoint, type === 'fuel' ? {
+          ...form,
+          Registration_No: form.Vehicle_ID ? lookups.vehicles.find(item => item.Vehicle_ID === form.Vehicle_ID)?.Registration_No || '' : '',
+          Driver_Name: form.Driver_ID ? lookups.drivers.find(item => item.Driver_ID === form.Driver_ID)?.Name || '' : '',
+          ...(form.Entry_Mode === 'By litres' ? { Amount: Number(form.Litres || 0) * Number(form.Rate_Per_Litre || 0) } : { Litres: '', Rate_Per_Litre: '' })
+        } : form)
       }
       setModal(false)
       await load()
@@ -301,7 +313,7 @@ export default function DataPage({ type }) {
       <Records rows={filtered} search={search} setSearch={setSearch} title="Trip income" columns={['Income_ID', 'Trip_ID', 'Customer', 'Freight_Amount', 'Additional_Charges']}/>
       <Records rows={extra.payments || []} search={search} setSearch={setSearch} title="Payments received" columns={['Payment_ID', 'Trip_ID', 'Payment_Date', 'Amount', 'Payment_Mode']}/>
       <Records rows={extra.expenses || []} search={search} setSearch={setSearch} title="Other expenses" columns={['Expense_ID', 'Trip_ID', 'Expense_Date', 'Category', 'Amount']}/>
-      {modal && <RecordModal title={`Add ${kind}`} onClose={() => setModal(false)} fields={financeFields[kind]} form={form} setForm={setForm} error={error} busy={busy} onSubmit={submit}/>}
+      {modal && <RecordModal title={`Add ${kind}`} onClose={() => setModal(false)} fields={financeFields[kind]} form={form} setForm={setForm} error={error} busy={busy} lookups={lookups} onSubmit={submit}/>}
     </div>
   }
 
@@ -330,26 +342,43 @@ export default function DataPage({ type }) {
       setForm={setForm}
       error={error}
       busy={busy}
+      lookups={lookups}
       onSubmit={submit}
     />}
   </div>
 }
 
-function RecordModal({ title, onClose, fields, form, setForm, error, busy, onSubmit }) {
+function RecordModal({ title, onClose, fields, form, setForm, error, busy, onSubmit, lookups = { vehicles: [], drivers: [] } }) {
   return <Modal title={title} onClose={onClose}>
     <form className="form-grid" onSubmit={onSubmit}>
       {fields.map(([key, label, type, options, required]) => (
         <label key={key}>{label}
-          {type === 'select'
+          {type === 'vehicle-select'
+            ? <select required={!!required} value={form[key] ?? ''} onChange={event => setForm({ ...form, [key]: event.target.value })}>
+                <option value="">Select vehicle</option>
+                {lookups.vehicles.map(vehicle => <option key={vehicle.Vehicle_ID} value={vehicle.Vehicle_ID}>{vehicle.Registration_No} — ID {vehicle.Vehicle_ID}</option>)}
+              </select>
+            : type === 'driver-select'
+            ? <select required={!!required} value={form[key] ?? ''} onChange={event => setForm({ ...form, [key]: event.target.value })}>
+                <option value="">Select driver</option>
+                {lookups.drivers.map(driver => <option key={driver.Driver_ID} value={driver.Driver_ID}>{driver.Name} — ID {driver.Driver_ID}</option>)}
+              </select>
+            : type === 'select'
             ? <select required={!!required} value={form[key] ?? ''} onChange={event => setForm({ ...form, [key]: event.target.value })}>
                 <option value="">Select</option>
                 {options.map(option => <option key={option} value={option}>{option}</option>)}
               </select>
+            : key === 'Litres' && form.Entry_Mode === 'By amount'
+            ? null
+            : (key === 'Rate_Per_Litre' && form.Entry_Mode === 'By amount')
+            ? null
+            : (key === 'Amount' && form.Entry_Mode === 'By litres')
+            ? <input type="number" value={Number(form.Litres || 0) * Number(form.Rate_Per_Litre || 0)} readOnly aria-label="Calculated fuel amount"/>
             : <input
                 required={!!required}
                 type={type}
                 value={form[key] ?? ''}
-                onChange={event => setForm({ ...form, [key]: event.target.value })}
+                onChange={event => setForm({ ...form, [key]: key === 'Registration_No' ? event.target.value.toUpperCase() : event.target.value })}
               />}
         </label>
       ))}
