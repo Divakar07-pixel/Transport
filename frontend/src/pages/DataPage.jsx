@@ -48,7 +48,7 @@ const configs = {
     icon: Route,
     columns: ['Trip_ID', 'Vehicle_ID', 'Driver_ID', 'Trip_Date', 'From_Location', 'To_Location', 'Status'],
     fields: [
-      ['Vehicle_ID', 'Vehicle ID', 'text', true],
+      ['Vehicle_ID', 'Vehicle', 'vehicle-select', true],
       ['Driver_ID', 'Driver ID', 'text', true],
       ['Customer', 'Customer', 'text'],
       ['Goods_Description', 'Goods description', 'text'],
@@ -146,7 +146,7 @@ export default function DataPage({ type }) {
       } else {
         const response = await api.get(config.endpoint)
         setRows(response.data)
-        if (type === 'fuel') {
+        if (type === 'fuel' || type === 'trips') {
           const [vehicles, drivers] = await Promise.all([api.get('/vehicles'), api.get('/drivers')])
           setLookups({ vehicles: vehicles.data, drivers: drivers.data })
         }
@@ -356,7 +356,7 @@ function RecordModal({ title, onClose, fields, form, setForm, error, busy, onSub
           {type === 'vehicle-select'
             ? <select required={!!required} value={form[key] ?? ''} onChange={event => setForm({ ...form, [key]: event.target.value })}>
                 <option value="">Select vehicle</option>
-                {lookups.vehicles.map(vehicle => <option key={vehicle.Vehicle_ID} value={vehicle.Vehicle_ID}>{vehicle.Registration_No} — ID {vehicle.Vehicle_ID}</option>)}
+                {[...lookups.vehicles].sort((a, b) => (a.Status === 'Available' ? -1 : 0) - (b.Status === 'Available' ? -1 : 0)).map(vehicle => <option key={vehicle.Vehicle_ID} value={vehicle.Vehicle_ID}>{vehicle.Registration_No || 'No registration'} — ID {vehicle.Vehicle_ID} ({vehicle.Status || 'Status not set'})</option>)}
               </select>
             : type === 'driver-select'
             ? <select required={!!required} value={form[key] ?? ''} onChange={event => setForm({ ...form, [key]: event.target.value })}>
