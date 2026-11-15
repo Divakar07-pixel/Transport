@@ -145,7 +145,7 @@ export default function DataPage({ type }) {
         setRows(response.data)
       }
     } catch (loadError) {
-      setError(loadError.response?.data?.error || 'Unable to load records')
+      setError(loadError.code ? `${loadError.code}: ${loadError.message}` : (loadError.message || 'Unable to load records'))
     }
   }
 
@@ -183,7 +183,7 @@ export default function DataPage({ type }) {
       setModal(false)
       await load()
     } catch (submitError) {
-      setError(submitError.response?.data?.error || 'Could not save record')
+      setError(submitError.code ? `${submitError.code}: ${submitError.message}` : (submitError.message || 'Could not save record'))
     } finally {
       setBusy(false)
     }
@@ -197,7 +197,7 @@ export default function DataPage({ type }) {
       await api.delete(`${config.endpoint}/${id}`)
       await load()
     } catch (deleteError) {
-      setError(deleteError.response?.data?.error || 'Could not delete record')
+      setError(deleteError.code ? `${deleteError.code}: ${deleteError.message}` : (deleteError.message || 'Could not delete record'))
     }
   }
 
