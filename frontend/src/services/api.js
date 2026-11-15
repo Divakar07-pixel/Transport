@@ -46,6 +46,20 @@ async function get(url) {
   if (path === '/dashboard') {
     const [vehicles, drivers, trips, fuel, income, expenses] = await Promise.all(['vehicles','drivers','trips','fuel','income','expenses'].map(rows))
     const completed = trips.filter(x => x.Status === 'Completed')
+    const tripDateById = new Map(trips.map(trip => [trip.Trip_ID, trip.Trip_Date]))
+    const monthKeys = Array.from({ length: 6 }, (_, index) => {
+      const date = new Date()
+      date.setDate(1)
+      date.setMonth(date.getMonth() - (5 - index))
+      return { key: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`, month: date.toLocaleString('en-IN', { month: 'short' }) }
+    })
+    const monthly = monthKeys.map(({ key, month }) => {
+      const inMonth = value => String(value || '').slice(0, 7) === key
+      const monthIncome = income.filter(item => inMonth(tripDateById.get(item.Trip_ID))).reduce((total, item) => total + Number(item.Freight_Amount || 0) + Number(item.Additional_Charges || 0), 0)
+      const monthExpenses = [...fuel.filter(item => inMonth(item.Fuel_Date)), ...expenses.filter(item => inMonth(item.Expense_Date))].reduce((total, item) => total + Number(item.Amount || 0), 0)
+      return { month, income: monthIncome, expense: monthExpenses }
+    })
+    const trip_status_counts = ['Scheduled', 'In Progress', 'Completed', 'Delayed', 'Cancelled'].map(status => ({ status, count: trips.filter(trip => trip.Status === status).length }))
     const sum = (list, key) => list.reduce((total, item) => total + Number(item[key] || 0), 0)
     const revenue = sum(income, 'Freight_Amount') + sum(income, 'Additional_Charges')
     const fuelExpenses = sum(fuel, 'Amount')
@@ -62,6 +76,8 @@ async function get(url) {
       trip_expenses: fuelExpenses + otherExpenses,
       trip_profit: revenue - fuelExpenses - otherExpenses,
       completed_trips: completed.length,
+      monthly_performance: monthly,
+      trip_status_counts,
       recent_trips: [...trips].sort((a, b) => {
         const dateA = new Date(a.Trip_Date || a.Created_At || 0).getTime()
         const dateB = new Date(b.Trip_Date || b.Created_At || 0).getTime()
