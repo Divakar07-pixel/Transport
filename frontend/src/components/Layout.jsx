@@ -15,7 +15,7 @@ export default function Layout({user,onLogout}) {
   async function logout(){await signOut(auth);onLogout();nav('/login')}
   return <div className="app-shell">
     <aside className={`sidebar ${open?'sidebar-open':''}`}>
-      <div className="brand"><div className="brand-mark"><Truck size={22}/></div><div><b>TransportPro</b><small>FLEET MANAGEMENT</small></div></div>
+      <div className="brand"><div className="brand-mark"><Truck size={22}/></div><div><b>Hello Transport</b><small>FLEET MANAGEMENT</small></div></div>
       <div className="nav-label">WORKSPACE</div>
       <nav>{links.map(([label,path,Icon])=><NavLink key={path} to={path} end={path==='/'} onClick={()=>setOpen(false)} className={({isActive})=>`nav-link ${isActive?'active':''}`}><Icon size={18}/><span>{label}</span></NavLink>)}</nav>
       <div className="sidebar-bottom"><div className="admin-chip"><div className="avatar">A</div><div><b>{user?.email || 'Admin'}</b><small>Administrator</small></div></div><button className="logout-btn" onClick={logout}><LogOut size={17}/> Sign out</button></div>
