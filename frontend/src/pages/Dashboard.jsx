@@ -6,7 +6,7 @@ import StatCard from '../components/StatCard'
 const money=n=>'₹'+Number(n||0).toLocaleString('en-IN',{maximumFractionDigits:0})
 export default function Dashboard(){
  const [data,setData]=useState(null);const [error,setError]=useState('')
- async function load(){try{const r=await api.get('/dashboard');setData(r.data);setError('')}catch(e){setError(e.response?.data?.error||'Could not load dashboard')}}
+ async function load(){try{const r=await api.get('/dashboard');setData(r.data);setError('')}catch(e){setError(e.code ? `${e.code}: ${e.message}` : (e.message || 'Could not load dashboard'))}}
  useEffect(()=>{load()},[])
  const chart=[{month:'Jan',income:0,expense:0},{month:'Feb',income:0,expense:0},{month:'Mar',income:0,expense:0},{month:'Apr',income:0,expense:0},{month:'May',income:0,expense:0},{month:'Jun',income:0,expense:0}]
  return <div className="stack-lg"><div className="welcome-row"><div><h2>Good day, Admin <span>✦</span></h2><p>Here’s what’s happening with your transport business.</p></div><button className="secondary-btn" onClick={load}><RefreshCw size={16}/> Refresh data</button></div>{error&&<div className="error-box">{error}</div>}
