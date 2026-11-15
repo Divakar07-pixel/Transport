@@ -61,7 +61,12 @@ async function get(url) {
       revenue,
       trip_expenses: fuelExpenses + otherExpenses,
       trip_profit: revenue - fuelExpenses - otherExpenses,
-      completed_trips: completed.length
+      completed_trips: completed.length,
+      recent_trips: [...trips].sort((a, b) => {
+        const dateA = new Date(a.Trip_Date || a.Created_At || 0).getTime()
+        const dateB = new Date(b.Trip_Date || b.Created_At || 0).getTime()
+        return dateB - dateA
+      }).slice(0, 5)
     })
   }
   throw new Error(`Unsupported Firebase data request: ${path}`)
