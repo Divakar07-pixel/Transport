@@ -46,6 +46,7 @@ const configs = {
     desc: 'Plan goods movement and monitor each delivery.',
     endpoint: '/trips',
     icon: Route,
+    idField: 'Trip_ID',
     columns: ['Trip_ID', 'Vehicle_ID', 'Driver_ID', 'Trip_Date', 'From_Location', 'To_Location', 'Status'],
     fields: [
       ['Vehicle_ID', 'Vehicle', 'vehicle-select', true],
@@ -317,7 +318,7 @@ export default function DataPage({ type }) {
     </div>
   }
 
-  const canEdit = ['vehicles', 'drivers', 'fuel'].includes(type)
+  const canEdit = ['vehicles', 'drivers', 'trips', 'fuel'].includes(type)
   return <div className="stack-lg">
     <div className="page-intro"><h2>{config.title}</h2><p>{config.desc}</p></div>
     <div className="action-row">
