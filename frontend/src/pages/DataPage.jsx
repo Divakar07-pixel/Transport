@@ -50,7 +50,7 @@ const configs = {
     columns: ['Trip_ID', 'Vehicle_ID', 'Driver_ID', 'Trip_Date', 'From_Location', 'To_Location', 'Status'],
     fields: [
       ['Vehicle_ID', 'Vehicle', 'vehicle-select', true],
-      ['Driver_ID', 'Driver ID', 'text', true],
+      ['Driver_ID', 'Driver', 'driver-select', true],
       ['Customer', 'Customer', 'text'],
       ['Goods_Description', 'Goods description', 'text'],
       ['From_Location', 'From location', 'text', true],
@@ -362,7 +362,7 @@ function RecordModal({ title, onClose, fields, form, setForm, error, busy, onSub
             : type === 'driver-select'
             ? <select required={!!required} value={form[key] ?? ''} onChange={event => setForm({ ...form, [key]: event.target.value })}>
                 <option value="">Select driver</option>
-                {lookups.drivers.map(driver => <option key={driver.Driver_ID} value={driver.Driver_ID}>{driver.Name} — ID {driver.Driver_ID}</option>)}
+                {[...lookups.drivers].sort((a, b) => (a.Availability === 'Available' ? -1 : 0) - (b.Availability === 'Available' ? -1 : 0)).map(driver => <option key={driver.Driver_ID} value={driver.Driver_ID}>{driver.Name || 'Unnamed driver'} — ID {driver.Driver_ID} ({driver.Availability || 'Status not set'})</option>)}
               </select>
             : type === 'select'
             ? <select required={!!required} value={form[key] ?? ''} onChange={event => setForm({ ...form, [key]: event.target.value })}>
