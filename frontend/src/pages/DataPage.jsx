@@ -102,14 +102,14 @@ const financeFields = {
     ['Additional_Charges', 'Additional charges', 'number']
   ],
   payment: [
-    ['Trip_ID', 'Trip ID', 'text', true],
+    ['Trip_ID', 'Trip', 'trip-select', true],
     ['Payment_Date', 'Payment date', 'date', true],
     ['Amount', 'Amount', 'number', true],
     ['Payment_Mode', 'Payment mode', 'select', ['Cash', 'Bank Transfer', 'UPI', 'Cheque'], true],
     ['Reference', 'Reference', 'text']
   ],
   expense: [
-    ['Trip_ID', 'Trip ID', 'text', true],
+    ['Trip_ID', 'Trip', 'trip-select', true],
     ['Expense_Date', 'Expense date', 'date', true],
     ['Category', 'Category', 'select', ['Toll', 'Driver Allowance', 'Loading/Unloading', 'Parking', 'Repair', 'Other'], true],
     ['Amount', 'Amount', 'number', true],
