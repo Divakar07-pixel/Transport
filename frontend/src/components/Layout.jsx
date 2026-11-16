@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { NavLink as RouterNavLink } from 'react-router-dom'
-import { LayoutDashboard, Truck, Users, Route, Fuel, Wallet, ChartNoAxesCombined, FileSpreadsheet, Settings as SettingsIcon, LogOut, Menu, Bell } from 'lucide-react'
+import { LayoutDashboard, Truck, Users, Route, Fuel, Wallet, ChartNoAxesCombined, FileSpreadsheet, Settings as SettingsIcon, LogOut, Menu, Bell, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { useState } from 'react'
 import { signOut } from 'firebase/auth'
 import { auth } from '../services/firebase'
@@ -10,12 +10,12 @@ const links = [
   ['Reports & Analytics','/reports',ChartNoAxesCombined],['Excel Management','/excel',FileSpreadsheet],['Settings','/settings',SettingsIcon]
 ]
 export default function Layout({user,onLogout}) {
-  const [open,setOpen]=useState(false); const nav=useNavigate(); const loc=useLocation()
+  const [open,setOpen]=useState(false); const [collapsed,setCollapsed]=useState(false); const nav=useNavigate(); const loc=useLocation()
   const title=links.find(x=>x[1]===loc.pathname)?.[0] || 'Dashboard'
   async function logout(){await signOut(auth);onLogout();nav('/login')}
   return <div className="app-shell">
-    <aside className={`sidebar ${open?'sidebar-open':''}`}>
-      <div className="brand"><div className="brand-mark"><Truck size={22}/></div><div><b>Hello Transport</b><small>FLEET MANAGEMENT</small></div></div>
+    <aside className={`sidebar ${open?'sidebar-open':''} ${collapsed?'sidebar-collapsed':''}`}>
+      <div className="brand"><div className="brand-mark"><Truck size={22}/></div><div className="brand-copy"><b>Hello Transport</b><small>FLEET MANAGEMENT</small></div><button className="sidebar-toggle" onClick={()=>setCollapsed(!collapsed)} title={collapsed?'Expand sidebar':'Collapse sidebar'} aria-label={collapsed?'Expand sidebar':'Collapse sidebar'}>{collapsed?<PanelLeftOpen size={17}/>:<PanelLeftClose size={17}/>}</button></div>
       <div className="nav-label">WORKSPACE</div>
       <nav>{links.map(([label,path,Icon])=><NavLink key={path} to={path} end={path==='/'} onClick={()=>setOpen(false)} className={({isActive})=>`nav-link ${isActive?'active':''}`}><Icon size={18}/><span>{label}</span></NavLink>)}</nav>
       <div className="sidebar-bottom"><div className="admin-chip"><div className="avatar">A</div><div><b>{user?.email || 'Admin'}</b><small>Administrator</small></div></div><button className="logout-btn" onClick={logout}><LogOut size={17}/> Sign out</button></div>
