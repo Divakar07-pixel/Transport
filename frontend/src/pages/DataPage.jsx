@@ -38,7 +38,7 @@ const configs = {
       ['Licence_Expiry', 'Licence expiry', 'date'],
       ['Employment_Status', 'Employment status', 'select', ['Active', 'Inactive']],
       ['Availability', 'Availability', 'select', ['Available', 'On Trip', 'Unavailable', 'Inactive']],
-      ['Assigned_Vehicle_ID', 'Assigned vehicle ID', 'text']
+      ['Assigned_Vehicle_ID', 'Assigned vehicle (optional)', 'vehicle-select']
     ]
   },
   trips: {
@@ -72,7 +72,7 @@ const configs = {
     columns: ['Fuel_ID', 'Fuel_Date', 'Vehicle_ID', 'Driver_ID', 'Trip_ID', 'Fuel_Type', 'Litres', 'Rate_Per_Litre', 'Amount', 'Odometer_KM'],
     fields: [
       ['Vehicle_ID', 'Vehicle', 'vehicle-select', true],
-      ['Trip_ID', 'Trip ID (optional)', 'text'],
+      ['Trip_ID', 'Trip (optional)', 'trip-select'],
       ['Driver_ID', 'Driver', 'driver-select'],
       ['Fuel_Date', 'Fuel date', 'date', true],
       ['Fuel_Type', 'Fuel type', 'select', ['Diesel', 'Petrol'], true],
@@ -148,9 +148,13 @@ export default function DataPage({ type }) {
       } else {
         const response = await api.get(config.endpoint)
         setRows(response.data)
-        if (type === 'fuel' || type === 'trips') {
+        if (type === 'fuel' || type === 'trips' || type === 'drivers') {
           const [vehicles, drivers] = await Promise.all([api.get('/vehicles'), api.get('/drivers')])
           setLookups(previous => ({ ...previous, vehicles: vehicles.data, drivers: drivers.data }))
+        }
+        if (type === 'fuel') {
+          const trips = await api.get('/trips')
+          setLookups(previous => ({ ...previous, trips: trips.data }))
         }
       }
     } catch (loadError) {
@@ -170,7 +174,7 @@ export default function DataPage({ type }) {
   function openForm(formKind, record = null) {
     setKind(formKind)
     setEditing(record)
-    setForm(record ? { ...record } : {})
+    setForm(record ? { ...record } : (formKind === 'fuel' ? { Entry_Mode: 'By litres', Fuel_Type: 'Diesel', Fuel_Date: new Date().toISOString().slice(0,10) } : {}))
     setError('')
     setModal(true)
   }
@@ -358,17 +362,17 @@ function RecordModal({ title, onClose, fields, form, setForm, error, busy, onSub
           {type === 'vehicle-select'
             ? <select required={!!required} value={form[key] ?? ''} onChange={event => setForm({ ...form, [key]: event.target.value })}>
                 <option value="">Select vehicle</option>
-                {[...lookups.vehicles].sort((a, b) => (a.Status === 'Available' ? -1 : 0) - (b.Status === 'Available' ? -1 : 0)).map(vehicle => <option key={vehicle.Vehicle_ID} value={vehicle.Vehicle_ID}>{vehicle.Registration_No || 'No registration'} — ID {vehicle.Vehicle_ID} ({vehicle.Status || 'Status not set'})</option>)}
+                {[...lookups.vehicles].sort((a, b) => (a.Status === 'Available' ? -1 : 0) - (b.Status === 'Available' ? -1 : 0)).map(vehicle => <option key={vehicle.Vehicle_ID} value={vehicle.Vehicle_ID}>{vehicle.Registration_No || 'No registration'} · {vehicle.Vehicle_Type || 'Vehicle'} · {vehicle.Status || 'Status not set'} · Ref {vehicle.Vehicle_ID}</option>)}
               </select>
             : type === 'trip-select'
             ? <select required={!!required} value={form[key] ?? ''} onChange={event => setForm({ ...form, [key]: event.target.value })}>
                 <option value="">Choose a trip</option>
-                {[...(lookups.trips || [])].sort((a, b) => String(b.Trip_Date || '').localeCompare(String(a.Trip_Date || ''))).map(trip => <option key={trip.Trip_ID} value={trip.Trip_ID}>{trip.Trip_ID} — {trip.From_Location || 'Origin'} → {trip.To_Location || 'Destination'} ({trip.Trip_Date || 'No date'})</option>)}
+                {[...(lookups.trips || [])].sort((a, b) => String(b.Trip_Date || '').localeCompare(String(a.Trip_Date || ''))).map(trip => <option key={trip.Trip_ID} value={trip.Trip_ID}>{trip.From_Location || 'Origin'} → {trip.To_Location || 'Destination'} · {trip.Trip_Date || 'No date'} · {trip.Status || 'Status'} · Ref {trip.Trip_ID}</option>)}
               </select>
             : type === 'driver-select'
             ? <select required={!!required} value={form[key] ?? ''} onChange={event => setForm({ ...form, [key]: event.target.value })}>
                 <option value="">Select driver</option>
-                {[...lookups.drivers].sort((a, b) => (a.Availability === 'Available' ? -1 : 0) - (b.Availability === 'Available' ? -1 : 0)).map(driver => <option key={driver.Driver_ID} value={driver.Driver_ID}>{driver.Name || 'Unnamed driver'} — ID {driver.Driver_ID} ({driver.Availability || 'Status not set'})</option>)}
+                {[...lookups.drivers].sort((a, b) => (a.Availability === 'Available' ? -1 : 0) - (b.Availability === 'Available' ? -1 : 0)).map(driver => <option key={driver.Driver_ID} value={driver.Driver_ID}>{driver.Name || 'Unnamed driver'} · {driver.Phone || 'No phone'} · {driver.Availability || 'Status not set'} · Ref {driver.Driver_ID}</option>)}
               </select>
             : type === 'select'
             ? <select required={!!required} value={form[key] ?? ''} onChange={event => setForm({ ...form, [key]: event.target.value })}>
