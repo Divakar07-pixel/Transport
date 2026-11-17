@@ -70,7 +70,7 @@ export default function Login({ onLogin }) {
     <section className="tp-login-showcase">
       <div className="tp-login-brand">
         <span className="tp-brand-mark"><Zap size={24} strokeWidth={2.5}/></span>
-        <span><strong>TransportPro</strong><small>FLEET OPERATIONS PLATFORM</small></span>
+        <span><strong>Hello Transport</strong><small>FLEET MANAGEMENT</small></span>
       </div>
       <div className="tp-login-copy">
         <span className="tp-eyebrow">GOODS TRANSPORT MANAGEMENT</span>
@@ -90,13 +90,13 @@ export default function Login({ onLogin }) {
     <section className="tp-login-side">
       <div className="tp-mobile-brand">
         <span className="tp-brand-mark"><Zap size={22} strokeWidth={2.5}/></span>
-        <strong>TransportPro</strong>
+        <strong>Hello Transport</strong>
       </div>
       <form className="tp-login-card" onSubmit={submit}>
         <header className="tp-form-header">
           <span className="tp-eyebrow">ADMINISTRATOR PORTAL</span>
           <h2>Welcome back</h2>
-          <p>Sign in to continue to TransportPro</p>
+          <p>Sign in to continue to Hello Transport</p>
         </header>
 
         
@@ -145,7 +145,7 @@ export default function Login({ onLogin }) {
         <div className="tp-login-divider"><span>SECURE ADMIN ACCESS</span></div>
         <div className="tp-security-note"><ShieldCheck size={17}/><span>Your fleet data is protected and encrypted</span></div>
       </form>
-      <footer className="tp-login-footer">© {new Date().getFullYear()} TransportPro. All rights reserved.</footer>
+      <footer className="tp-login-footer">© {new Date().getFullYear()} Hello Transport. All rights reserved.</footer>
     </section>
   </main>
 }
