@@ -1,5 +1,6 @@
 import { useEffect,useState } from 'react'
-import { X } from 'lucide-react'
+import { X, Plus, UserPlus, ClipboardList } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { Truck,Users,Route,Fuel,Wallet,ArrowUpRight,RefreshCw } from 'lucide-react'
 import { ResponsiveContainer,AreaChart,Area,XAxis,YAxis,Tooltip,CartesianGrid,BarChart,Bar } from 'recharts'
 import api from '../services/api'
@@ -10,7 +11,7 @@ export default function Dashboard(){
  async function load(){try{const r=await api.get('/dashboard');setData(r.data);setError('')}catch(e){setError(e.code ? `${e.code}: ${e.message}` : (e.message || 'Could not load dashboard'))}}
  useEffect(()=>{load()},[])
  const chart=data?.monthly_performance || []
- return <><div className="stack-lg"><div className="welcome-row"><div><h2>Good day, Admin <span>✦</span></h2><p>Here’s what’s happening with your transport business.</p></div><button className="secondary-btn" onClick={load}><RefreshCw size={16}/> Refresh data</button></div>{error&&<div className="error-box">{error}</div>}
+ return <><div className="stack-lg"><div className="welcome-row"><div><h2>Welcome to your workspace <span>✦</span></h2><p>Manage vehicles, drivers, trips and expenses from one place.</p></div><button className="secondary-btn" onClick={load}><RefreshCw size={16}/> Refresh data</button></div><div className="quick-actions-panel"><div><h3>Quick actions</h3><p>Common tasks — choose what you want to do.</p></div><div className="quick-actions-grid"><Link to="/vehicles" className="quick-action-card"><span className="quick-action-icon blue"><Truck size={19}/></span><span><b>Add vehicle</b><small>Register a vehicle</small></span><Plus size={16}/></Link><Link to="/drivers" className="quick-action-card"><span className="quick-action-icon purple"><UserPlus size={19}/></span><span><b>Add driver</b><small>Register a driver</small></span><Plus size={16}/></Link><Link to="/trips" className="quick-action-card"><span className="quick-action-icon green"><Route size={19}/></span><span><b>Create trip</b><small>Assign vehicle and driver</small></span><Plus size={16}/></Link><Link to="/finance" className="quick-action-card"><span className="quick-action-icon orange"><Wallet size={19}/></span><span><b>Record income / expense</b><small>Track business finances</small></span><Plus size={16}/></Link></div></div>{error&&<div className="error-box">{error}</div>}
  <div className="stats-grid">
  <StatCard label="Total vehicles" value={data?.total_vehicles??'—'} caption={`${data?.available_vehicles??0} available`} Icon={Truck}/>
  <StatCard label="Available drivers" value={data?.available_drivers??'—'} caption={`${data?.total_drivers??0} registered`} Icon={Users} tone="purple"/>
