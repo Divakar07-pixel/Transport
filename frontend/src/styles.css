@@ -35,3 +35,30 @@
 .sidebar-collapsed .logout-btn{display:grid;place-items:center;width:42px;height:42px;margin:8px auto 0;padding:0;font-size:0;gap:0}
 .sidebar-collapsed .logout-btn svg{width:18px;height:18px}
 .sidebar-collapsed .admin-chip{padding-bottom:8px}
+
+
+/* Hello Transport usability foundation */
+.quick-actions-panel{background:#fff;border:1px solid #e9edf4;border-radius:13px;padding:18px 20px;display:grid;gap:14px}
+.quick-actions-panel h3{font-size:14px;margin:0 0 5px}
+.quick-actions-panel>div:first-child p{font-size:11px;color:#8a96a8;margin:0}
+.quick-actions-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.quick-action-card{display:flex;align-items:center;gap:10px;min-width:0;padding:12px;border:1px solid #e9edf4;border-radius:10px;text-decoration:none;color:#18243b;transition:border-color .18s,box-shadow .18s,transform .18s}
+.quick-action-card:hover{border-color:#b9cdf7;box-shadow:0 5px 16px #18243b0c;transform:translateY(-1px)}
+.quick-action-card>span:nth-child(2){display:grid;gap:4px;flex:1;min-width:0}
+.quick-action-card b{font-size:11px;line-height:1.3}
+.quick-action-card small{font-size:9px;color:#8a96a8;line-height:1.35}
+.quick-action-card>svg{color:#8a96a8;flex:0 0 auto}
+.quick-action-icon{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;flex:0 0 auto}
+.guide-kicker{display:flex;align-items:center;gap:7px;color:#2563eb;font-size:10px;font-weight:700;letter-spacing:1px;margin-bottom:9px}
+.guide-modal{width:min(570px,100%)}
+.guide-modal>header{margin-bottom:15px}
+.guide-modal h2{font-size:20px}
+.guide-steps{display:grid;gap:12px}
+.guide-steps>div{display:flex;align-items:flex-start;gap:11px;padding:10px;border:1px solid #edf0f5;border-radius:9px}
+.guide-steps>div>span{width:25px;height:25px;border-radius:50%;background:#edf3ff;color:#2563eb;display:grid;place-items:center;font-size:11px;font-weight:700;flex:0 0 auto}
+.guide-steps section b{font-size:11px}
+.guide-steps section p{font-size:10px;color:#8793a5;margin:4px 0 0;line-height:1.5}
+.guide-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:18px;padding-top:14px;border-top:1px solid #edf0f5}
+.guide-footer>span{font-size:10px;color:#8a96a8;line-height:1.5}
+@media(max-width:1100px){.quick-actions-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.quick-actions-grid{grid-template-columns:1fr}.quick-actions-panel{padding:15px}.guide-footer{align-items:stretch;flex-direction:column}.guide-footer .primary-btn{width:100%}}
