@@ -25,7 +25,7 @@ export default function App() {
     setChecking(false)
   }), [])
 
-  if (checking) return <div className="loading-screen"><div className="spinner"/>Loading TransportPro</div>
+  if (checking) return <div className="loading-screen"><div className="spinner"/>Loading Hello Transport</div>
   return <Routes>
     <Route path="/login" element={user ? <Navigate to="/" replace/> : <Login/>} />
     <Route path="/" element={<Guard user={user}><Layout user={user} onLogout={() => setUser(null)} /></Guard>}>
