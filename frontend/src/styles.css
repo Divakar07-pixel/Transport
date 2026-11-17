@@ -27,3 +27,11 @@
 .trip-status-item b{font-size:10px;font-weight:600}
 .trip-status-item strong{font-size:13px}
 @media(max-width:760px){.chart-placeholder{height:190px}}
+
+
+/* Keep sign-out reachable on short screens and in collapsed navigation */
+.sidebar nav{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+.sidebar-bottom{flex:0 0 auto;padding-top:8px;background:#101b33}
+.sidebar-collapsed .logout-btn{display:grid;place-items:center;width:42px;height:42px;margin:8px auto 0;padding:0;font-size:0;gap:0}
+.sidebar-collapsed .logout-btn svg{width:18px;height:18px}
+.sidebar-collapsed .admin-chip{padding-bottom:8px}
